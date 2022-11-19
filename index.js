@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const multer = require('multer');
 require("./src/db/db");
 const User = require("./models/user");
 const Task = require("./models/task");
@@ -20,6 +21,29 @@ app.use(express.json());
 //   }
 // })
 
+const upload = multer({
+  dest:'images',
+  limits:{
+    fileSize:100000000
+  },
+  fileFilter(req,file,cb){
+    if(!file.originalname.match(/\.(doc|docx)$/)){
+        return cb(new Error("Please upload Docx"))
+    }
+    else{
+      console.log(file)
+    }
+    cb(undefined,true)
+
+    
+  }
+})
+app.post('/upload',upload.single('upload'),(req,res)=>{
+  res.send();
+  console.log(res)
+},(error,req,res,next)=>{
+  res.status(400).send({message:error.message})
+})
 app.use(userRouter);
 app.use(taskRouter);
 

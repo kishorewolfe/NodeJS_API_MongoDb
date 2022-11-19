@@ -28,14 +28,19 @@ const jwt = require('jsonwebtoken')
         required:true
 
     },
+
     tokens:[{
         token:{
             type:String,
             required:true
         }
+    }],    
+    avatar:{
+        type:Buffer,
+        
     }
 
-    ]
+    
 },{
     timestamps:true
 })

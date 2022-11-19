@@ -4,11 +4,27 @@ const express = require('express')
 const app = express()
 const jwt = require('jsonwebtoken')
 const User = require('../../models/user')
+const sharp = require('sharp')
 const router = new express.Router
+const multer = require('multer')
 const auth = require("../middleware/auth")
 
 const bcrypt = require('bcryptjs')
 const { default: mongoose } = require('mongoose')
+const storage = multer.memoryStorage()
+
+const upload = multer({
+    dest:'photos',
+    limits:{
+        fileSize:10000000
+    },
+    fileFilter(req,file,cb){
+        if(!file.originalname.match(/\.(jpg)$/)){
+            return cb(new Error("PLEASE CHECK YOUR FILE"))
+        }
+        cb(undefined,true)
+    },storage:storage
+  })
 router.get('/usertasks',auth,(req,res)=>{
     User.find({}).then((taks)=>{
         res.send(taks)
@@ -33,6 +49,49 @@ router.post('/usertasks/login',async(req,res)=>{
     }
     catch(e){
         console.log("error",e)
+    }
+})
+router.post('/usertasksupload',auth,upload.single('avatar'),async(req,res)=>{
+    try{
+        const bufferValue = await sharp(req.file.buffer).resize({width:400,height:300}).png().toBuffer();
+      
+        console.log(bufferValue)
+
+        req.user.avatar = bufferValue
+        console.log(req.user.avatar)
+        await req.user.save();
+        res.status(200).send({message:"UPLOADED SUCCESSFULLy!!!"})
+
+    }
+    catch(e){
+        res.status(500)
+    }
+},(error,req,res,next)=>{
+    res.status(400).send({message:error.message})
+})
+
+router.delete('/usertasksupload',auth,async(req,res)=>{
+   req.user.avatar =undefined;
+   await user.save();
+   res.send({message:"USER DELETED PIC SUccessfully!!!"})
+})
+
+
+router.get('/usertasksupload/:id/avatar',async(req,res)=>{
+    console.log("GET")
+    try{
+        console.log("GET")
+        const user = await User.findById(req.params.id)
+
+        if(!user || !user.avatar){
+            return new Error("NO IMAGE DETECTED!")
+        }
+        res.set('Content-Type','image/jpg')
+        res.send(user.avatar)
+    }
+    catch(e){
+        res.status(400).send({message:error.message})
+
     }
 })
 router.post("/usertasks/logout",auth,async (req,res)=>{
