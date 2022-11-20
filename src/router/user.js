@@ -12,7 +12,7 @@ const auth = require("../middleware/auth")
 const bcrypt = require('bcryptjs')
 const { default: mongoose } = require('mongoose')
 const storage = multer.memoryStorage()
-
+const {sendWelcomeMail,accCanceleMail}=require('../../email/mail')
 const upload = multer({
     dest:'photos',
     limits:{
@@ -44,6 +44,7 @@ router.post('/usertasks/login',async(req,res)=>{
         console.log("LOGIN")
 
         const user = await User.findByCredentials(req.body.email,req.body.password)
+         sendWelcomeMail(req.body.email,req.body.name);
         const token = await  user.generateAuthToken() 
         res.send({user,token}).status(200)
     }
@@ -164,9 +165,11 @@ router.post('/usertasks',async  (req, res) => {
     }
   
 })
-router.delete('/usertasks/:id',async(req,res)=>{
+router.delete('/usertasks/:id',auth,async(req,res)=>{
     try{
+        console.log("TRYING")
         const del_user = await User.findByIdAndDelete(req.params.id)
+        accCanceleMail(req.user.email,req.user.name)
         if(!del_user){
             return res.status(404).send()
         }
