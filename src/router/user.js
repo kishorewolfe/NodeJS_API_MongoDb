@@ -49,7 +49,7 @@ router.post('/usertasks/login',async(req,res)=>{
         res.send({user,token}).status(200)
     }
     catch(e){
-        console.log("error",e)
+        res.status(400)
     }
 })
 router.post('/usertasksupload',auth,upload.single('avatar'),async(req,res)=>{
